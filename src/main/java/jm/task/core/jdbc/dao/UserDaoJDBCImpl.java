@@ -7,151 +7,84 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jm.task.core.jdbc.util.Util.getSQLConnection;
+
+
 public class UserDaoJDBCImpl implements UserDao {
-    private Util util = new Util();
-    private Connection conn = null;
-    private Statement statement = null;
-    private PreparedStatement preparedStatement = null;
-    private ResultSet resultSet = null;
-
     public UserDaoJDBCImpl() {
+
     }
 
+    @Override
     public void createUsersTable() {
-        final String SQL_CREATE = "CREATE TABLE IF NOT EXISTS users" +
-                "(id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT," +
-                "name VARCHAR(45) NOT NULL," +
-                "lastName VARCHAR(45) NOT NULL," +
-                "age INT(255))";
-
-        try {
-            conn = util.getSQLConnection();
-            statement = conn.createStatement();
-            statement.execute(SQL_CREATE);
+        String sql = "create table IF NOT EXISTS users(id BIGINT primary key auto_increment, name varchar(45), lastname varchar(45), age INT(255));";
+        try (Connection connection = getSQLConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.execute();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                statement.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
+    @Override
     public void dropUsersTable() {
-        final String SQL_DROP = "DROP TABLE IF EXISTS users";
-
-        try {
-            conn = util.getSQLConnection();
-            statement = conn.createStatement();
-            statement.executeUpdate(SQL_DROP);
+        String sql = "drop table IF EXISTS users;";
+        try (Connection connection = getSQLConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.execute();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                statement.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
+    @Override
     public void saveUser(String name, String lastName, byte age) {
-        final String SQL_SAVE = "INSERT INTO users(name, lastName, age) VALUES (?,?,?)";
-
-        try {
-            conn = util.getSQLConnection();
-            preparedStatement = conn.prepareStatement(SQL_SAVE);
+        String sql = "INSERT INTO users (name,lastname,age) VALUES (?,?,?);";
+        try (Connection connection = getSQLConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                preparedStatement.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
+    @Override
     public void removeUserById(long id) {
-        final String SQL_REMOVE = "delete from users where id = ?";
-
-        try {
-            conn = util.getSQLConnection();
-            preparedStatement = conn.prepareStatement(SQL_REMOVE);
+        String sql = "DELETE FROM users WHERE ID = ?;";
+        try (Connection connection = getSQLConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
-
-
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                preparedStatement.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
 
+    @Override
     public List<User> getAllUsers() {
-        final String SQL_SELECT_ALL = "select * from users";
-        List<User> userList = new ArrayList<>();
-
-        try {
-            conn = util.getSQLConnection();
-            preparedStatement = conn.prepareStatement(SQL_SELECT_ALL);
-            resultSet = preparedStatement.executeQuery();
-
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT name,lastname,age from users";
+        try (Connection connection = getSQLConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                String name = resultSet.getString(2);
-                String lastName = resultSet.getString(3);
-                byte age = resultSet.getByte(4);
-                userList.add(new User(name, lastName, age));
+                User user = new User();
+                user.setName(resultSet.getString("name"));
+                user.setLastName(resultSet.getString("lastname"));
+                user.setAge(resultSet.getByte("age"));
+                users.add(user);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                resultSet.close();
-                preparedStatement.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
-        return userList;
-
+        return users;
     }
 
+    @Override
     public void cleanUsersTable() {
-        final String  SQL_CLEAN = "TRUNCATE TABLE users";
-
-        try {
-            conn = util.getSQLConnection();
-            statement = conn.createStatement();
-            statement.execute(SQL_CLEAN);
+        String sql = "TRUNCATE TABLE users;";
+        try (Connection connection = getSQLConnection(); PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                statement.close();
-                conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
         }
     }
-
-
-
 }

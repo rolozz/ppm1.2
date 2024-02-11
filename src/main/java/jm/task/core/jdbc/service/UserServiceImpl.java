@@ -6,7 +6,7 @@ import jm.task.core.jdbc.model.User;
 import java.util.List;
 
 public class UserServiceImpl implements UserService {
-    UserDao userDaoJDBCVersion = new UserDaoJDBCImpl();
+   private UserDao userDaoJDBCVersion = new UserDaoJDBCImpl();
     
 
 
